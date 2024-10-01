@@ -103,6 +103,7 @@ class PinpointDriver(
     var type = ReadData.TRANSLATION_AND_ROTATION
 
     fun bulkRead() {
+        // unsure as to if this should be readScope.async {} or how it is now.
         readScope.launch {
             while (isActive) {
                 try {
