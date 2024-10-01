@@ -78,4 +78,11 @@ lint/intermediates/
 lint/generated/
 lint/outputs/
 lint/tmp/
+
+build/
+*/build/
+
+.gradle/
+.idea/
+
 # lint/reports/
