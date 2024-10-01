@@ -19,7 +19,6 @@ import com.qualcomm.robotcore.hardware.configuration.annotations.I2cDeviceType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -187,6 +186,25 @@ class PinpointDriver(
     fun setHeadingMode(headingMode: Boolean) {
         isOnlyHeading = headingMode
     }
+
+    private fun lookupStatus(s: Int): DeviceStatus {
+        if ((s and DeviceStatus.CALIBRATING.status) != 0) {
+            return DeviceStatus.CALIBRATING
+        }
+
+        val xPodDetected = (s and DeviceStatus.FAULT_X_POD_NOT_DETECTED.status) == 0
+        val yPodDetected = (s and DeviceStatus.FAULT_Y_POD_NOT_DETECTED.status) == 0
+
+        return when {
+            !xPodDetected && !yPodDetected -> DeviceStatus.FAULT_NO_PODS_DETECTED
+            !xPodDetected -> DeviceStatus.FAULT_X_POD_NOT_DETECTED
+            !yPodDetected -> DeviceStatus.FAULT_Y_POD_NOT_DETECTED
+            (s and DeviceStatus.FAULT_IMU_RUNAWAY.status) != 0 -> DeviceStatus.FAULT_IMU_RUNAWAY
+            (s and DeviceStatus.READY.status) != 0 -> DeviceStatus.READY
+            else -> DeviceStatus.NOT_READY
+        }
+    }
+
 
     private fun writeByteArray(reg: I2CRegistry, bytes: ByteArray) {
         deviceClient.write(reg.id, bytes)
